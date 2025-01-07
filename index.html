@@ -1,5 +1,8 @@
+index.html
+@@ -1,109 +1,84 @@
 <!DOCTYPE html>
 <html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,10 +21,24 @@
   </script>
 </head>
 <body>
+  <title>Three.js EXR Example</title>
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
+    import { EXRLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/EXRLoader.js';
+
+    // 画面サイズ
+    const sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+
+    // キャンバスの作成
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
 
     // シーンの作成
     const scene = new THREE.Scene();
@@ -92,20 +109,82 @@
     );
 
     // カメラコントロールの追加
+
+    // レンダラーの設定
+    const renderer = new THREE.WebGLRenderer({ canvas });
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+
+    // カメラの設定
+    const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
+    camera.position.set(0, 1, 5);
+    scene.add(camera);
+
+    // コントロールの設定
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.target.set(0, 0, 0); // 中央をターゲットに設定
     controls.enableZoom = true; // 拡大縮小を有効化
 
     // ウィンドウサイズ変更対応
+    // EXR環境マップの読み込み
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+
+    new EXRLoader().load('./small_empty_room_3_4k.exr', (texture) => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+      scene.environment = envMap; // 環境マップとして設定
+      scene.background = texture; // 背景として設定
+
+      // オブジェクトの作成
+      const geometry = new THREE.SphereGeometry(1, 32, 32);
+      const material = new THREE.MeshStandardMaterial({
+        metalness: 0.9,
+        roughness: 0.1,
+        envMap: envMap,
+      });
+      const sphere = new THREE.Mesh(geometry, material);
+      scene.add(sphere);
+    });
+
+    // アニメーションループ
+    const animate = () => {
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    // ウィンドウリサイズ処理
     window.addEventListener('resize', () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
+      sizes.width = window.innerWidth;
+      sizes.height = window.innerHeight;
+      camera.aspect = sizes.width / sizes.height;
       camera.updateProjectionMatrix();
+      renderer.setSize(sizes.width, sizes.height);
     });
   </script>
+</head>
+<body>
 </body>
 </html>
+
+
+
+
+
+
+
+  
+
+
+
 
 
 
