@@ -1,8 +1,5 @@
-index.html
-@@ -1,109 +1,84 @@
 <!DOCTYPE html>
 <html lang="ja">
-<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,175 +18,100 @@ index.html
   </script>
 </head>
 <body>
-  <title>Three.js EXR Example</title>
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.module.js';
-    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
-    import { EXRLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/EXRLoader.js';
-
-    // 画面サイズ
-    const sizes = {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-
-    // キャンバスの作成
-    const canvas = document.createElement('canvas');
-    document.body.appendChild(canvas);
+    import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
 
     // シーンの作成
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000); // 背景を真っ黒に設定
+    scene.background = new THREE.Color(0x000000);
 
-    // カメラの作成（透視投影カメラ）
-    const camera = new THREE.PerspectiveCamera(
-      75, // 視野角
-      16 / 9, // アスペクト比 (一般的な動画の比率に設定)
-      0.1, // 近クリップ面
-      1000 // 遠クリップ面
-    );
-    camera.position.set(0, 2, 6); // カメラの位置を調整
-    camera.lookAt(0, 0, 0); // 中央を見るよう設定
+    // カメラの作成
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2, 6);
 
     // レンダラーの作成
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.outputEncoding = THREE.sRGBEncoding; // ガンマ補正を有効化
+    renderer.outputEncoding = THREE.sRGBEncoding;
     document.body.appendChild(renderer.domElement);
 
     // 環境光の追加
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // 環境光の強度を元に戻す
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    // 方向光の追加（メインライト）
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // 強度を1.5に設定
-    directionalLight.position.set(5, 10, 7.5); // 光源の位置
+    // 方向光の追加
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    let mixer; // アニメーションミキサー
+    // アニメーション用ミキサー
+    let mixer;
 
-    // 3Dモデルの読み込み
+    // モデルの読み込み
     const loader = new GLTFLoader();
-    loader.load(
-      './MOONSHOT_EX-WORK.glb', // モデルファイルのパス
-      (gltf) => {
-        const model = gltf.scene;
-        scene.add(model);
+    loader.load('./MOONSHOT_EX-WORK.glb', (gltf) => {
+      const model = gltf.scene;
+      scene.add(model);
 
-        // モデルの位置とスケールを設定
-        model.position.set(0, 0, 0);
-        model.scale.set(2, 2, 2); // モデルを大きく設定
+      // モデルの位置とスケールを設定
+      model.position.set(0, 0, 0);
+      model.scale.set(2, 2, 2);
 
-        // アニメーションの設定
-        if (gltf.animations.length > 0) {
-          mixer = new THREE.AnimationMixer(model);
+      // アニメーションの設定
+      if (gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(model);
 
-          // 各アニメーションを個別に管理して再生
-          gltf.animations.forEach((clip) => {
-            const action = mixer.clipAction(clip);
-            action.setLoop(THREE.LoopRepeat); // 無限ループ
-            action.play(); // 再生開始
-          });
-        }
-
-        // アニメーションループで更新
-        const clock = new THREE.Clock();
-        const animate = () => {
-          requestAnimationFrame(animate);
-          const delta = clock.getDelta();
-          if (mixer) mixer.update(delta);
-          controls.update();
-          renderer.render(scene, camera);
-        };
-        animate();
-      },
-      undefined,
-      (error) => {
-        console.error('モデルの読み込みに失敗しました', error);
+        gltf.animations.forEach((clip) => {
+          const action = mixer.clipAction(clip);
+          action.setLoop(THREE.LoopRepeat); // 無限ループ
+          action.play();
+        });
       }
-    );
+    });
 
-    // カメラコントロールの追加
-
-    // レンダラーの設定
-    const renderer = new THREE.WebGLRenderer({ canvas });
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
-
-    // カメラの設定
-    const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
-    camera.position.set(0, 1, 5);
-    scene.add(camera);
-
-    // コントロールの設定
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(0, 0, 0); // 中央をターゲットに設定
-    controls.enableZoom = true; // 拡大縮小を有効化
-    controls.enablePan = false; // 縦横移動を無効化
-
-    // 水平方向回転のみに制限
-    controls.minPolarAngle = Math.PI / 2; // 下方向の制限
-    controls.maxPolarAngle = Math.PI / 2; // 上方向の制限
-
-    // ウィンドウサイズ変更対応
-    // EXR環境マップの読み込み
+    // 環境マップの設定
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
 
     new EXRLoader().load('./small_empty_room_3_4k.exr', (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-      scene.environment = envMap; // 環境マップとして設定
-      scene.background = texture; // 背景として設定
-
-      // オブジェクトの作成
-      const geometry = new THREE.SphereGeometry(1, 32, 32);
-      const material = new THREE.MeshStandardMaterial({
-        metalness: 0.9,
-        roughness: 0.1,
-        envMap: envMap,
-      });
-      const sphere = new THREE.Mesh(geometry, material);
-      scene.add(sphere);
+      scene.environment = envMap;
+      scene.background = texture;
     });
+
+    // カメラコントロールの追加
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 0, 0);
+    controls.enableZoom = true;
+    controls.enablePan = false;
+    controls.minPolarAngle = Math.PI / 2;
+    controls.maxPolarAngle = Math.PI / 2;
 
     // アニメーションループ
+    const clock = new THREE.Clock();
     const animate = () => {
-      controls.update();
-      renderer.render(scene, camera);
+      const delta = clock.getDelta();
+      if (mixer) mixer.update(delta); // アニメーションの更新
+      controls.update(); // カメラコントロールの更新
+      renderer.render(scene, camera); // シーンのレンダリング
       requestAnimationFrame(animate);
     };
-
     animate();
 
-    // ウィンドウリサイズ処理
+    // ウィンドウリサイズ対応
     window.addEventListener('resize', () => {
-<<<<<<< HEAD
-      renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
-      sizes.width = window.innerWidth;
-      sizes.height = window.innerHeight;
-      camera.aspect = sizes.width / sizes.height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(sizes.width, sizes.height);
-=======
-      camera.aspect = 16 / 9; // アスペクト比を固定
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
->>>>>>> 91b5d5e6fb76d79277754df7d9357966503932bf
     });
   </script>
-</head>
-<body>
 </body>
 </html>
-
 
 
 
