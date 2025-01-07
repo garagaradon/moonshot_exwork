@@ -44,11 +44,15 @@ index.html
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000); // 背景を真っ黒に設定
 
-    // カメラの作成
+    // カメラの作成（透視投影カメラ）
     const camera = new THREE.PerspectiveCamera(
-      75, window.innerWidth / window.innerHeight, 0.1, 1000
+      75, // 視野角
+      16 / 9, // アスペクト比 (一般的な動画の比率に設定)
+      0.1, // 近クリップ面
+      1000 // 遠クリップ面
     );
     camera.position.set(0, 2, 6); // カメラの位置を調整
+    camera.lookAt(0, 0, 0); // 中央を見るよう設定
 
     // レンダラーの作成
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -127,6 +131,11 @@ index.html
     controls.enableDamping = true;
     controls.target.set(0, 0, 0); // 中央をターゲットに設定
     controls.enableZoom = true; // 拡大縮小を有効化
+    controls.enablePan = false; // 縦横移動を無効化
+
+    // 水平方向回転のみに制限
+    controls.minPolarAngle = Math.PI / 2; // 下方向の制限
+    controls.maxPolarAngle = Math.PI / 2; // 上方向の制限
 
     // ウィンドウサイズ変更対応
     // EXR環境マップの読み込み
@@ -161,6 +170,7 @@ index.html
 
     // ウィンドウリサイズ処理
     window.addEventListener('resize', () => {
+<<<<<<< HEAD
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
       sizes.width = window.innerWidth;
@@ -168,6 +178,11 @@ index.html
       camera.aspect = sizes.width / sizes.height;
       camera.updateProjectionMatrix();
       renderer.setSize(sizes.width, sizes.height);
+=======
+      camera.aspect = 16 / 9; // アスペクト比を固定
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+>>>>>>> 91b5d5e6fb76d79277754df7d9357966503932bf
     });
   </script>
 </head>
@@ -182,7 +197,6 @@ index.html
 
 
   
-
 
 
 
